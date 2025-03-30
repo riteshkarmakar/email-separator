@@ -1,4 +1,5 @@
 import re
+import os
 import pandas as pd
 import questionary
 from pathlib import Path
@@ -6,7 +7,7 @@ from pathlib import Path
 
 __author__ = "Ritesh Karmakar"
 __license__ = "MIT"
-__version__ = "1.0.0"
+__version__ = "1.2.0"
 __github__ = "https://github.com/riteshkarmakar/email-separator"
 
 EMAIL_REGEX = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
@@ -33,6 +34,9 @@ def separate_emails(file_path: Path, email_column_name: str):
     result_df = pd.DataFrame(columns=df.columns)
     
     for _, row in df.iterrows():
+        if not pd.notna(row[email_column_name]):
+            continue
+
         emails = [email.strip() for email in re.split(r"[,/;]", str(row[email_column_name]))]
         
         # Create a new row for each email
@@ -53,12 +57,21 @@ def separate_emails(file_path: Path, email_column_name: str):
     questionary.print(f" Emails separated and saved to {new_path.as_posix()!r}", style="fg:green")
 
 
+def validate_excel_path(path: str) -> bool | str:
+    if not os.path.exists(path):
+        return "Invalid file path or the path doesn't exist"
+    elif not path.lower().endswith(".xlsx"):
+        return "It must be an Excel file (*.xlsx)"
+    else:
+        return True
+
+
 if __name__ == "__main__":
     show_copyright()
 
     file_path = questionary.path(
         "Enter the path of the Excel file:",
-        validate=lambda path: True if path.endswith(".xlsx") else "Only Excel file (.xlsx) is allowed",
+        validate=validate_excel_path,
         qmark=""
     ).ask()
 
