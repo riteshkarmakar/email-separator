@@ -33,17 +33,17 @@ def separate_emails(file_path: Path, email_column_name: str):
     df = pd.read_excel(file_path)
     result_df = pd.DataFrame(columns=df.columns)
     
-    for _, row in df.iterrows():
+    for i, row in df.iterrows():
         if not pd.notna(row[email_column_name]):
             continue
 
-        emails = [email.strip() for email in re.split(r"[,/;]", str(row[email_column_name]))]
+        emails = [email.strip() for email in re.split(r"[,/;]", str(row[email_column_name]).strip(r",/;"))]
         
         # Create a new row for each email
         for email in emails:
             if not is_valid_email(email):
                 email = questionary.text(
-                    f"{email} is not a valid email. Please enter a valid email:",
+                    f"{i+2}. {email} is not a valid email. Please enter a valid email:",
                     validate=lambda email: True if is_valid_email(email) else "Invalid Email",
                     qmark=""
                 ).ask()
